@@ -4,7 +4,7 @@
     "dotenv": "^10.0.0",
     "websocket": "^1.0.34"
   },
-  "name": "xena",
+  "name": "xena.js",
   "version": "0.0.1",
   "description": "A terrible rushed Javascript library for Hiven.",
   "main": "index.js",
