@@ -3,5 +3,19 @@
     "axios": "^0.23.0",
     "dotenv": "^10.0.0",
     "websocket": "^1.0.34"
-  }
+  },
+  "name": "xena",
+  "version": "0.0.1",
+  "description": "A terrible rushed Javascript library for Hiven.",
+  "main": "index.js",
+  "author": "Two",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/real2two/xena.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/real2two/xena.js/issues"
+  },
+  "homepage": "https://github.com/real2two/xena.js#readme"
 }
