@@ -46,8 +46,36 @@ class Client {
                       'Authorization': this.token
                     }
                 });
+
+                if (!res.data.success) return false;
+
+                res.data.data.edit = (async (content) => {
+                    const res2 = await axios.patch(`https://api.hiven.io/v1/rooms/${room_id}/messages/${res.data.data.id}`, {
+                        content
+                    }, {
+                        headers: {
+                          'Authorization': this.token
+                        }
+                    });
+
+                    if (!res2.data.success) return false;
+                    return res2.data.data;
+                });
+
+                res.data.data.delete = (async (content) => {
+                    const res2 = await axios.delete(`https://api.hiven.io/v1/rooms/${room_id}/messages/${res.data.data.id}`, {
+                        headers: {
+                          'Authorization': this.token
+                        }
+                    });
+
+                    console.log(res2.data)
+
+                    if (!res2.data.success) return false;
+                    return res2.data.data;
+                });
         
-                return res.data;
+                return res.data.data;
             })
         }
         this.cache = {
