@@ -86,6 +86,8 @@ class Client {
                     const res = JSON.parse(message.utf8Data);
                     if (res.op == 1) return this.heartbeatInterval = res.d.hbt_int;
 
+                    this.emit(res.e, res);
+
                     switch (res.e) {
                         case "INIT_STATE":
                             this.emit("ready");
@@ -108,6 +110,8 @@ class Client {
                             delete res.d.rooms; // Just use <client>.cache.rooms.filter(i => i.house_id == HOUSEID);
 
                             this.cache.houses[res.d.id] = res.d;
+
+                            this.emit("houseJoin", res.d);
                             break;
                         case "HOUSE_UPDATE":
                             delete res.d.entities; // temp. screw entities.
@@ -115,14 +119,20 @@ class Client {
                             delete res.d.type;
 
                             this.cache.houses[res.d.id] = res.d;
+
+                            this.emit("houseUpdate", res.d);
                             break;
                         case "ROLE_CREATE":
                         case "ROLE_UPDATE":
                             this.cache.houses[res.d.house_id].roles = this.cache.houses[res.d.house_id].roles.filter(i => i.id !== res.d.id);
                             this.cache.houses[res.d.house_id].roles.push(res.d);
+
+                            this.emit(res.e == "ROLE_CREATE" ? "roleCreate" : "roleUpdate", res.d);
                             break;
                         case "ROLE_DELETE":
                             this.cache.houses[res.d.house_id].roles = this.cache.houses[res.d.house_id].roles.filter(i => i.id !== res.d.id);
+
+                            this.emit("roleDelete", res.d);
                             break;
                         case "MESSAGE_CREATE":
                             //console.log(res.d)
@@ -141,6 +151,8 @@ class Client {
                             break;
                         case "ROOM_CREATE":
                             this.cache.rooms.push(res.d);
+
+                            this.emit("roomCreate", res.d);
                             break;
                         case "ROOM_UPDATE":
                             const testexist = this.cache.rooms.filter(i => i.id == res.d.id);
@@ -150,6 +162,8 @@ class Client {
                             }
 
                             this.cache.rooms.push(res.d);
+
+                            this.emit("roomUpdate", res.d);
                             break;
                         case "ROOM_DELETE":
                             const testexist2 = this.cache.rooms.filter(i => i.id == res.d.id);
@@ -157,6 +171,8 @@ class Client {
                                 delete testexist2[0];
                                 this.cache.rooms = testexist2;
                             }
+
+                            this.emit("roomDelete", res.d);
                             break;
                     }
                 }
