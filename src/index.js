@@ -94,14 +94,35 @@ class Client {
                         case "HOUSE_JOIN":
                             const members = res.d.members;
                             delete res.d.members;
+
                             for (const { user_id, user } of members) {
                                 user.cached_recieved_timestamp = Date.now();
                                 this.cache.users[user_id] = user;
                             }
 
-                            for (const room of res.d.rooms) this.cache.rooms.push(room); //this.cache.rooms.concat(res.d.rooms); doesn't work.
+                            for (const room of res.d.rooms) {
+                                this.cache.rooms.push(room); //this.cache.rooms.concat(res.d.rooms); doesn't work.
+                            }
+
+                            delete res.d.entities; // temp. screw entities.
+                            delete res.d.rooms; // Just use <client>.cache.rooms.filter(i => i.house_id == HOUSEID);
 
                             this.cache.houses[res.d.id] = res.d;
+                            break;
+                        case "HOUSE_UPDATE":
+                            delete res.d.entities; // temp. screw entities.
+                            delete res.d.house_id; // same thing as .id, unnecessary.
+                            delete res.d.type;
+
+                            this.cache.houses[res.d.id] = res.d;
+                            break;
+                        case "ROLE_CREATE":
+                        case "ROLE_UPDATE":
+                            this.cache.houses[res.d.house_id].roles = this.cache.houses[res.d.house_id].roles.filter(i => i.id !== res.d.id);
+                            this.cache.houses[res.d.house_id].roles.push(res.d);
+                            break;
+                        case "ROLE_DELETE":
+                            this.cache.houses[res.d.house_id].roles = this.cache.houses[res.d.house_id].roles.filter(i => i.id !== res.d.id);
                             break;
                         case "MESSAGE_CREATE":
                             //console.log(res.d)
