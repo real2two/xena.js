@@ -163,7 +163,7 @@ class Client {
                         case "MESSAGE_CREATE":
                             const message = res.d;
 
-                            if (!res.d.recipient_ids && req.d.member && req.d.member.user) {
+                            if (!res.d.recipient_ids && res.d.member && res.d.member.user) {
                                 res.d.member.user.cached_recieved_timestamp = Date.now();
                                 this.cache.users[res.d.author.id] = res.d.member.user;
                             }
