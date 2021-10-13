@@ -5,12 +5,55 @@ class Client {
         if (!token) return console.error(new Error("Missing bot token.").stack);
 
         this.token = token;
-        this.get = {
-            user: this.getUser
+        this.users = {
+            get: (async id => {
+                if (typeof id !== "string") return console.error(new Error("The user ID must be a string.").stack); 
+                if (typeof id.length == 0) return console.error(new Error("The user ID cannot be empty.").stack);
+        
+                const axios = require("axios");
+        
+                const res = await axios.get(`https://api.hiven.io/v1/users/${id}`);
+                if (!res.data.success) return false;
+        
+                res.data.data.cached_recieved_timestamp = Date.now();
+                this.cache.users[res.data.data] = res.data.data;
+        
+                return res.data.data;
+            })
+        }
+        this.room = {
+            get: (async id => {
+                if (typeof id !== "string") return console.error(new Error("The room ID must be a string.").stack); 
+                if (typeof id.length == 0) return console.error(new Error("The room ID cannot be empty.").stack);
+        
+                const room = this.cache.rooms.filter(i => i.id == id);
+
+                return room.length == 1 ? room[0] : undefined;
+            }),
+
+            send: (async (room_id, content) => {
+                if (typeof room_id !== "string") return console.error(new Error("The room ID must be a string.").stack); 
+                if (typeof room_id.length == 0) return console.error(new Error("The room ID cannot be empty.").stack);
+                if (typeof content !== "string") return console.error(new Error("The content must be a string.").stack); 
+                if (typeof content.length == 0) return console.error(new Error("The content cannot be empty.").stack);
+        
+                const axios = require("axios");
+        
+                const res = await axios.post(`https://api.hiven.io/v1/rooms/${room_id}/messages`, {
+                    content
+                }, {
+                    headers: {
+                      'Authorization': this.token
+                    }
+                });
+        
+                return res.data;
+            })
         }
         this.cache = {
             houses: {},
-            users: {}
+            users: {},
+            rooms: []
         };
         this.online = true;
 
@@ -35,7 +78,6 @@ class Client {
             })
 
             connection.on('close', () => {
-                console.log("Bot shutdown.");
                 this.online = false;
             });
 
@@ -56,6 +98,9 @@ class Client {
                                 user.cached_recieved_timestamp = Date.now();
                                 this.cache.users[user_id] = user;
                             }
+
+                            for (const room of res.d.rooms) this.cache.rooms.push(room); //this.cache.rooms.concat(res.d.rooms); doesn't work.
+
                             this.cache.houses[res.d.id] = res.d;
                             break;
                         case "MESSAGE_CREATE":
@@ -68,10 +113,29 @@ class Client {
                             const room_id = message.room_id;
 
                             message.reply = async content => {
-                                return await this.sendinRoom(room_id, content);
+                                return await this.room.send(room_id, content);
                             };
 
                             this.emit("messageCreate", message);
+                            break;
+                        case "ROOM_CREATE":
+                            this.cache.rooms.push(res.d);
+                            break;
+                        case "ROOM_UPDATE":
+                            const testexist = this.cache.rooms.filter(i => i.id == res.d.id);
+                            if (testexist.length == 1) {
+                                delete testexist[0];
+                                this.cache.rooms = testexist;
+                            }
+
+                            this.cache.rooms.push(res.d);
+                            break;
+                        case "ROOM_DELETE":
+                            const testexist2 = this.cache.rooms.filter(i => i.id == res.d.id);
+                            if (testexist2.length == 1) {
+                                delete testexist2[0];
+                                this.cache.rooms = testexist2;
+                            }
                             break;
                     }
                 }
@@ -86,40 +150,6 @@ class Client {
         ws_client.on('connectFailed', function(error) {
             return console.error(new Error(error.toString()).stack);
         });
-    }
-  
-    async getUser(id) {
-        if (typeof id !== "string") return console.error(new Error("The user ID must be a string.").stack); 
-        if (typeof id.length == 0) return console.error(new Error("The user ID cannot be empty.").stack);
-
-        const axios = require("axios");
-
-        const res = await axios.get(`https://api.hiven.io/v1/users/${id}`);
-        if (!res.data.success) return false;
-
-        res.data.data.cached_recieved_timestamp = Date.now();
-        this.cache.users[res.data.data] = res.data.data;
-
-        return res.data.data;
-    }
-
-    async sendinRoom(room_id, content) {
-        if (typeof room_id !== "string") return console.error(new Error("The room ID must be a string.").stack); 
-        if (typeof room_id.length == 0) return console.error(new Error("The room ID cannot be empty.").stack);
-        if (typeof content !== "string") return console.error(new Error("The content must be a string.").stack); 
-        if (typeof content.length == 0) return console.error(new Error("The content cannot be empty.").stack);
-
-        const axios = require("axios");
-
-        const res = await axios.post(`https://api.hiven.io/v1/rooms/${room_id}/messages`, {
-            content
-        }, {
-            headers: {
-              'Authorization': this.token
-            }
-        });
-
-        return res.data;
     }
 
     listeners = {};
