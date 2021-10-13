@@ -69,8 +69,6 @@ class Client {
                         }
                     });
 
-                    console.log(res2.data)
-
                     if (!res2.data.success) return false;
                     return res2.data.data;
                 });
@@ -163,11 +161,12 @@ class Client {
                             this.emit("roleDelete", res.d);
                             break;
                         case "MESSAGE_CREATE":
-                            //console.log(res.d)
                             const message = res.d;
 
-                            res.d.member.user.cached_recieved_timestamp = Date.now();
-                            this.cache.users[res.d.author.id] = res.d.member.user;
+                            if (!res.d.recipient_ids) {
+                                res.d.member.user.cached_recieved_timestamp = Date.now();
+                                this.cache.users[res.d.author.id] = res.d.member.user;
+                            }
 
                             const room_id = message.room_id;
 
