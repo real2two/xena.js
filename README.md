@@ -1,3 +1,6 @@
+# Note: This is most likely discontinued since I don't have access to Hiven anymore. 
+
+
 ## xena.js
 
 A work in progress Hiven Javascript library. (ik code is bad rn, I'll organize it if I decide to continue this.)
